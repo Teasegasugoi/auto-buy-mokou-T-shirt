@@ -8,26 +8,52 @@ import signal
 
 
 # 商品一覧URL(例: 'http://www.bro-bra.jp/products/list.php?category_id=xxx')
-GOODS_LIST_URL = 'http://www.bro-bra.jp/products/list.php?category_id=5'
+GOODS_LIST_URL = 'https://www.bro-bra.jp/products/list.php?category_id=3'
 
 # カート画面URL
 CART_URL = 'http://www.bro-bra.jp/cart/'
 
-# 購入したい商品の情報を辞書に格納
-# key: ID(string)
-# value: 購入したい数(int)
+"""購入したい商品の情報を辞書に格納
+key: ID(string)
+value: 購入したい数(int)
+"""
 WANTED_GOODS_DICT = {
-    '1726': 3,
-    '1725': 4,
+    # ここに商品の情報を以下の辞書形式で記入
+    # ID : 購入したい数,
 }
 
-# .envファイルの内容を読み込む
-load_dotenv()
 
-# Chrome の起動オプションを設定する
-options = webdriver.ChromeOptions()
+def main():
+    # .envファイルの内容を読み込む
+    load_dotenv()
 
-# 商品をカートに入れる
+    # Chrome の起動オプションを設定する
+    options = webdriver.ChromeOptions()
+
+    try:
+        # 1. ブラウザの新規ウィンドウを開く
+        driver = webdriver.Chrome(options=options)
+        # 2. 対象サイト にアクセスする (ログインはしない)
+        driver.get(GOODS_LIST_URL)
+        # 3. 欲しい商品をカートに入れて、カート画面に遷移
+        if (len(WANTED_GOODS_DICT) < 1):
+            raise Exception
+        else:
+            add_to_cart(driver)
+        # 4. カートから購入手続き
+        cart_to_purchase(driver)
+        # 5. お客様情報入力ページ
+        input_personal_information(driver)
+
+    except:
+        print('エラー発生')
+        driver.quit()
+
+    else:
+        os.kill(driver.service.process.pid,signal.SIGTERM)
+
+
+# 商品をカートに入れる関数
 def add_to_cart(driver):
     for id, wanted_num in WANTED_GOODS_DICT.items():
         goods_id = 'cart' + id
@@ -35,9 +61,18 @@ def add_to_cart(driver):
         for i in range(wanted_num - 1):
             driver.find_element(By.XPATH, "//div[@class='quantity_level']/a[1]").click()
         driver.find_element(By.XPATH, "//div[@class='btn_area']/ul/li[@class='prev']/a[1]").click()
+    driver.get(CART_URL)
 
 
-# 個人情報入力
+# カート画面から購入手続き画面へ遷移する関数
+def cart_to_purchase(driver):
+    # レジに進む
+    driver.find_element(By.XPATH, "//input[@name='confirm']").click()
+    # 会員登録するかどうか画面, 今回は会員登録をせずに購入手続きへと進む
+    driver.find_element(By.ID, 'buystep').click()
+
+
+# 個人情報入力関数
 def input_personal_information(driver):
     # 姓
     driver.find_element(By.XPATH, "//input[@name='order_name01']").send_keys(os.environ['LAST_NAME'])
@@ -90,42 +125,9 @@ def input_personal_information(driver):
     driver.find_element(By.XPATH, "//input[@name='shipping_tel01']").send_keys(os.environ['PHONE_NUMBER_1'])
     driver.find_element(By.XPATH, "//input[@name='shipping_tel02']").send_keys(os.environ['PHONE_NUMBER_2'])
     driver.find_element(By.XPATH, "//input[@name='shipping_tel03']").send_keys(os.environ['PHONE_NUMBER_3'])
-
-
-try:
-    # ブラウザの新規ウィンドウを開く
-    driver = webdriver.Chrome(options=options)
-
-    # 1. 対象サイト にアクセスする (ログインはしない)
-    driver.get(GOODS_LIST_URL)
-
-    # 2. 欲しい商品をカートに入れる
-    if (len(WANTED_GOODS_DICT) < 1):
-        raise Exception
-    else:
-        add_to_cart(driver)
-
-    # 3.カート画面にアクセス
-    driver.get(CART_URL)
-
-    # 4. レジに進む
-    driver.find_element(By.XPATH, "//input[@name='confirm']").click()
-
-    # 5. 会員登録するかどうか画面, 今回は会員登録をせずに購入手続きへと進む
-    driver.find_element(By.ID, 'buystep').click()
-
-    # 6. お客様情報入力ページ
-    input_personal_information(driver)
-
-    # 次へボタン
+    # 次へボタンを押すことで入力終了
     driver.find_element(By.ID, 'singular').click()
 
 
-except:
-    print('エラー発生')
-    driver.quit()
-
-
-else:
-    os.kill(driver.service.process.pid,signal.SIGTERM)
-
+if __name__ == "__main__":
+    main()
