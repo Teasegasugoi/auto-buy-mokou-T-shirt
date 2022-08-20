@@ -9,27 +9,31 @@ Python 3.8.9
 Google Chrome バージョン: 104.x.xxxx.xxx (この例だとメジャーバージョンは104)
 ```
 
-## 準備, 実行
+## 準備
 1. 必要なライブラリ等をインストールする
     ```bash
     $ pip3 install chromedriver-binary=={YOUR_CHROME_MAJOR_VERSION}.*
     $ pip3 install selenium
     $ pip3 install python-dotenv
     ```
-2. `.env.example`を複製し、そのファイル名を`.env`に変更する。その後、`.env`にいろいろ書き込む
+2. `.env.example`を複製し、そのファイル名を`.env`に変更する。その後、`.env`に必要事項を書き込む
+
+## 使い方
+1. `main.py`の`GOODS_LIST_URL`を購入したいタレントのURLに書き換える(初期値はもこう先生)
+2. `main.py`の`WANTED_GOODS_DICT`に購入したい商品のIDと必要数を書く
 3. 以下を実行すると、Google Chrome が起動し、情報入力まで自動で行う
     ```
     $ python3 auto-buy-mokou-T-shirt/main.py
     ```
 
-## 環境変数 MOKOU_URL, MOKOU_GOODS_IDについて
-### MOKOU_URL
+## GOODS_LIST_URL, 商品IDについて
+### GOODS_LIST_URL
 このレイアウト画面のURLを想定
 ![MOKOU_URL](images/mokou_url.png)
 
-### MOKOU_GOODS_ID
-デベロッパーツールで購入したい商品の番号を確認, `product_form`の後に続く`4桁の数字`が`ID`となる\
-`.env`には`cart`+`4桁の数字`で書く。
+### 商品ID
+デベロッパーツールで購入したい商品の番号を確認, `product_form`の後に続く`4桁の数字`が`ID`となる
+
 ![MOKOU_GOODS_ID](images/mokou_goods_id.png)
 
 ## 参考
